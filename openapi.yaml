@@ -1,0 +1,305 @@
+openapi: 3.0.0
+servers:
+  - url: 'http://mngc-lab3:40658/'
+    description: Test server
+info:
+  description: |-
+    This API is documented in **OpenAPI format** and is based on
+    [NES API](https://cloud.nes.mn/) provided by [GCM](https://www.grapecity.mn/) team.
+  version: 1.0.0
+  title: NES API
+  x-logo:
+    url: 'https://www.grapecity.mn/uploads/4d4390d2-945b-45b9-9439-3fcc3d53001b.png'
+    altText: GCM logo
+tags:
+  - name: pet
+    description: Everything about your Pets
+  - name: store
+    description: Access to Petstore orders
+  - name: user
+    description: Operations about user
+  - name: pet_model
+    x-displayName: The Pet Model
+    description: |
+      <SchemaDefinition schemaRef="#/components/schemas/Pet" />
+  - name: store_model
+    x-displayName: The Order Model
+    description: |
+      <SchemaDefinition schemaRef="#/components/schemas/Order" exampleRef="#/components/examples/Order" showReadOnly={true} showWriteOnly={true} />
+x-tagGroups:
+  - name: General
+    tags:
+      - pet
+  - name: FI
+    tags:
+      - fi
+paths:
+  '/pet/{petId}':
+    get:
+      tags:
+        - pet
+      summary: Find pet by ID
+      description: Returns a single pet
+      operationId: getPetById
+      parameters:
+        - name: petId
+          in: path
+          description: ID of pet to return
+          required: true
+          deprecated: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Pet'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Pet not found
+      security: []
+    post:
+      tags:
+        - pet
+      summary: Updates a pet in the store with form data
+      description: ''
+      operationId: updatePetWithForm
+      parameters:
+        - name: petId
+          in: path
+          description: ID of pet that needs to be updated
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '405':
+          description: Invalid input
+      security: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  description: Updated name of the pet
+                  type: string
+                status:
+                  description: Updated status of the pet
+                  type: string
+    delete:
+      tags:
+        - pet
+      summary: Deletes a pet
+      description: ''
+      operationId: deletePet
+      parameters:
+        - name: api_key
+          in: header
+          required: false
+          schema:
+            type: string
+          example: Bearer <TOKEN>
+        - name: petId
+          in: path
+          description: Pet id to delete
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '400':
+          description: Invalid pet value
+      security: []
+  /fi/v1.0/sendEmail:
+    post:
+      summary: Мостоор мэйл илгээх
+      operationId: sendEmail
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                description: ''
+                type: object
+                x-examples:
+                  example-1:
+                    responseCode: ''
+                    responseDesc: ''
+                properties:
+                  responseCode:
+                    type: number
+                    description: Хариу код
+                  responseDesc:
+                    type: string
+                    description: Хариу тайлбар
+                required:
+                  - responseCode
+                  - responseDesc
+              examples:
+                example-1:
+                  value:
+                    responseCode: 0
+                    responseDesc: ''
+        '501':
+          description: 'Алдаа гарсан үед буцаах бөгөөд {MSG_CODE}-{MSG_DESC} бүтэцтэй мессеж байна.'
+      description: 16085620 - Мэдэгдэл мэйл илгээх
+      parameters:
+        - schema:
+            type: string
+          in: cookie
+          name: NESSESSION
+          description: '123'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: ''
+              type: object
+              x-examples:
+                example-1:
+                  subject: ''
+                  isBodyHtml: ''
+                  emailTo: ''
+                  emailBody: ''
+                  emailRecipient: ''
+                  fiCode: ''
+              properties:
+                subject:
+                  type: string
+                  description: Гарчиг
+                isBodyHtml:
+                  type: number
+                  description: HTML бүтэцтэй эсэх
+                  enum:
+                    - 0
+                    - 1
+                emailTo:
+                  type: string
+                  description: Хүлээн авагчийн хаяг
+                emailBody:
+                  type: string
+                  description: Мессежийн бие
+                emailRecipient:
+                  type: string
+                  description: Хүлээн авагчийн нэр
+                fiCode:
+                  type: string
+                  description: FI код
+              required:
+                - subject
+                - isBodyHtml
+                - emailTo
+                - emailBody
+                - emailRecipient
+                - fiCode
+            examples:
+              example-1:
+                value:
+                  subject: Test mail
+                  isBodyHtml: 0
+                  emailTo: test@gmail.com
+                  emailBody: 'hi, ...'
+                  emailRecipient: Test
+                  fiCode: FI1
+      tags:
+        - fi
+    parameters: []
+components:
+  schemas:
+    Pet:
+      type: object
+      required:
+        - name
+        - photoUrls
+      discriminator:
+        propertyName: petType
+        mapping:
+          cat: '#/components/schemas/Cat'
+          dog: '#/components/schemas/Dog'
+          bee: '#/components/schemas/HoneyBee'
+      properties:
+        id:
+          externalDocs:
+            description: Find more info here
+            url: 'https://example.com'
+          description: Pet ID
+          allOf:
+            - $ref: '#/components/schemas/Id'
+        category:
+          description: Categories this pet belongs to
+          allOf:
+            - $ref: '#/components/schemas/Category'
+        name:
+          description: The name given to a pet
+          type: string
+          example: Guru
+        photoUrls:
+          description: The list of URL to a cute photos featuring pet
+          type: array
+          maxItems: 20
+          xml:
+            name: photoUrl
+            wrapped: true
+          items:
+            type: string
+            format: url
+        friend:
+          allOf:
+            - $ref: '#/components/schemas/Pet'
+        tags:
+          description: Tags attached to the pet
+          type: array
+          minItems: 1
+          xml:
+            name: tag
+            wrapped: true
+          items:
+            $ref: '#/components/schemas/Tag'
+        status:
+          type: string
+          description: Pet status in the store
+          enum:
+            - available
+            - pending
+            - sold
+        petType:
+          description: Type of a pet
+          type: string
+      xml:
+        name: Pet
+  requestBodies:
+    Pet:
+      content:
+        application/json:
+          schema:
+            allOf:
+              - description: My Pet
+                title: Pettie
+              - $ref: '#/components/schemas/Pet'
+        application/xml:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: hooray
+      description: Pet object that needs to be added to the store
+      required: true
+  securitySchemes: {}
+  examples:
+    Order:
+      value:
+        quantity: 1
+        shipDate: '2018-10-19T16:46:45Z'
+        status: placed
+        complete: false
